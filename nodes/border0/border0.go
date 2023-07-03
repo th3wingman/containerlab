@@ -39,12 +39,13 @@ func (b *border0) Init(cfg *types.NodeConfig, opts ...nodes.NodeOption) error {
 
 	// set default image
 	if b.Cfg.Image == "" {
-		b.Cfg.Image = "ghcr.io/srl-labs/containerlab-border0.com:latest"
+		b.Cfg.Image = "ghcr.io/borderzero/border0:latest"
+		b.Cfg.Entrypoint = "/border0 connector start"
 	}
 
 	// prepare host and container paths for border0.com config bind
 	b.hostborder0yamlPath = path.Join(b.Cfg.LabDir, "border0.yaml")
-	b.containerborder0yamlPath = path.Join("/code", "border0.yaml")
+	b.containerborder0yamlPath = path.Join("/", "border0.yaml")
 	return nil
 }
 
@@ -103,8 +104,7 @@ func (b *border0) PostDeploy(ctx context.Context, params *nodes.PostDeployParams
 
 	// bring up the tunnels
 	b0Cmd := exec.NewExecCmdFromSlice([]string{
-		"/bin/sh", "-c",
-		"./border0 connector start --config " + b.containerborder0yamlPath + " 2> /proc/1/fd/2  1> /proc/1/fd/1",
+		"connector start --config " + b.containerborder0yamlPath + " 2> /proc/1/fd/2  1> /proc/1/fd/1",
 	})
 	err = b.Runtime.ExecNotWait(ctx, b.Cfg.LongName, b0Cmd)
 	if err != nil {

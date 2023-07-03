@@ -365,9 +365,17 @@ func ParseSocketCfg(s, host string) (*configSocket, error) {
 			result.Policies = append(result.Policies, strings.TrimSpace(x))
 		}
 	}
+	// add static upstream credentials if socket type is ssh
+	// setting the Default credentials
+	if result.Type == "ssh" {
+		result.UpstreamUsername = "admin"
+		result.UpstreamPassword = "NokiaSrl1!"
+	}
+
 	// process host
 	result.Host = host
 	return result, nil
+
 }
 
 // checkSockType checks that the types of the socket definitions from the publish config section

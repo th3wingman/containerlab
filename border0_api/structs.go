@@ -70,7 +70,10 @@ type StaticSocketsConfig struct {
 }
 
 type configConnector struct {
-	Name string `yaml:"name"`
+	Name                string `yaml:"name"`
+	ProviderType        string `yaml:"provider-type,omitempty"`
+	ProviderEnvironment string `yaml:"provider-environment,omitempty"`
+	ProviderRegion      string `yaml:"provider-region,omitempty"`
 }
 
 type configCredentials struct {
@@ -82,6 +85,9 @@ type configSocket struct {
 	Type     string   `yaml:"type"`
 	Host     string   `yaml:"host"`
 	Policies []string `yaml:"policies,omitempty"`
+	// now we add upstream credential fields
+	UpstreamUsername string `yaml:"upstream_username,omitempty"`
+	UpstreamPassword string `yaml:"upstream_password,omitempty"`
 }
 
 type CreatePolicyRequest struct {
