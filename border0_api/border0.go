@@ -294,9 +294,13 @@ func CreateBorder0Config(ctx context.Context, nodesMap map[string]nodes.Node, la
 
 	// iterate over structs to generate socket configs
 	for _, n := range nodesMap {
+		// grab short name and kind
+		nodeShortName := n.Config().ShortName
+		nodeKind := n.Config().Kind
+		// loop thru the publish section of the node config
 		for _, socket := range n.Config().Publish {
 			// Parse the socket config
-			sockConfig, err := ParseSocketCfg(socket, n.Config().LongName)
+			sockConfig, err := ParseSocketCfg(socket, n.Config().LongName, nodeKind)
 			if err != nil {
 				return "", err
 			}
@@ -306,11 +310,21 @@ func CreateBorder0Config(ctx context.Context, nodesMap map[string]nodes.Node, la
 				policyNames[policy] = struct{}{}
 			}
 
-			// determine the socketname
-			socketName := fmt.Sprintf("%s-%s-%d", n.Config().LongName, sockConfig.Type, sockConfig.Port)
-			yamlConfig.Sockets = append(yamlConfig.Sockets, map[string]*configSocket{
-				socketName: sockConfig,
-			})
+			// check if socket is border0
+			if nodeShortName == "border0" {
+				// set the socketname for border0 bastion
+				socketName := fmt.Sprintf("%s-bastion", n.Config().LongName)
+				yamlConfig.Sockets = append(yamlConfig.Sockets, map[string]*configSocket{
+					socketName: sockConfig,
+				})
+
+			} else {
+				// determine the socketname
+				socketName := fmt.Sprintf("%s-%s-%d", n.Config().LongName, sockConfig.Type, sockConfig.Port)
+				yamlConfig.Sockets = append(yamlConfig.Sockets, map[string]*configSocket{
+					socketName: sockConfig,
+				})
+			}
 		}
 	}
 
@@ -331,7 +345,7 @@ func CreateBorder0Config(ctx context.Context, nodesMap map[string]nodes.Node, la
 }
 
 // ParseSocketCfg parses the nodes publish configuration string and returns resulting *configSocket.
-func ParseSocketCfg(s, host string) (*configSocket, error) {
+func ParseSocketCfg(s, host string, kind string) (*configSocket, error) {
 	result := &configSocket{}
 	// split the socket definition string
 	split := strings.Split(s, "/")
@@ -344,15 +358,23 @@ func ParseSocketCfg(s, host string) (*configSocket, error) {
 		return result, err
 	}
 	result.Type = split[0]
-	// process port
-	p, err := strconv.Atoi(split[1]) // port
-	if err != nil {
-		return result, err
+	// process port, check if split[1] is sshserver and type is ssh
+	if split[0] == "ssh" && split[1] == "server" {
+		result.SSHServer = true
+	} else {
+		// process host
+		result.Host = host
+
+		// we are parsing out the port and making it an int
+		p, err := strconv.Atoi(split[1]) // port
+		if err != nil {
+			return result, err
+		}
+		if err := checkSockPort(p); err != nil {
+			return result, err
+		}
+		result.Port = p
 	}
-	if err := checkSockPort(p); err != nil {
-		return result, err
-	}
-	result.Port = p
 
 	// process policy
 	result.Policies = []string{}
@@ -365,15 +387,20 @@ func ParseSocketCfg(s, host string) (*configSocket, error) {
 			result.Policies = append(result.Policies, strings.TrimSpace(x))
 		}
 	}
-	// add static upstream credentials if socket type is ssh
-	// setting the Default credentials
+	// setting the Default credentials based on the kind of the node
 	if result.Type == "ssh" {
-		result.UpstreamUsername = "admin"
-		result.UpstreamPassword = "NokiaSrl1!"
+		// set defauilt creds for srl
+		if kind == "srl" {
+			result.UpstreamUsername = "admin"
+			result.UpstreamPassword = "NokiaSrl1!"
+		}
+		// set defauilt creds for cvx
+		if kind == "cvx" {
+			result.UpstreamUsername = "root"
+			result.UpstreamPassword = "root"
+		}
 	}
 
-	// process host
-	result.Host = host
 	return result, nil
 
 }

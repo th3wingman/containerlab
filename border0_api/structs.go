@@ -81,10 +81,12 @@ type configCredentials struct {
 }
 
 type configSocket struct {
-	Port     int      `yaml:"port"`
+	Port     int      `yaml:"port,omitempty"`
 	Type     string   `yaml:"type"`
-	Host     string   `yaml:"host"`
+	Host     string   `yaml:"host,omitempty"`
 	Policies []string `yaml:"policies,omitempty"`
+	// built-in ssh server, only if socket type is ssh
+	SSHServer bool `yaml:"sshserver,omitempty"`
 	// now we add upstream credential fields
 	UpstreamUsername string `yaml:"upstream_username,omitempty"`
 	UpstreamPassword string `yaml:"upstream_password,omitempty"`
