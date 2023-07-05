@@ -72,7 +72,7 @@ type StaticSocketsConfig struct {
 type configConnector struct {
 	Name                string `yaml:"name"`
 	ProviderType        string `yaml:"provider-type,omitempty"`
-	ProviderEnvironment string `yaml:"provider-environment,omitempty"`
+	ProviderEnvironment string `yaml:"provider-enviroment,omitempty"`
 	ProviderRegion      string `yaml:"provider-region,omitempty"`
 }
 

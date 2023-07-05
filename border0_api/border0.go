@@ -317,6 +317,10 @@ func CreateBorder0Config(ctx context.Context, nodesMap map[string]nodes.Node, la
 				yamlConfig.Sockets = append(yamlConfig.Sockets, map[string]*configSocket{
 					socketName: sockConfig,
 				})
+				// set the connector metadata:
+				yamlConfig.Connector.ProviderType = "aws"
+				yamlConfig.Connector.ProviderEnvironment = "containerlab"
+				yamlConfig.Connector.ProviderRegion = labname
 
 			} else {
 				// determine the socketname
@@ -399,6 +403,17 @@ func ParseSocketCfg(s, host string, kind string) (*configSocket, error) {
 			result.UpstreamUsername = "root"
 			result.UpstreamPassword = "root"
 		}
+		// set defauilt creds for vr-ros
+		if kind == "vr-ros" {
+			result.UpstreamUsername = "admin"
+			result.UpstreamPassword = "admin"
+		}
+		//set defauilt creds for vr-mikrotik_ros
+		if kind == "vr-mikrotik_ros" {
+			result.UpstreamUsername = "admin"
+			result.UpstreamPassword = "admin"
+		}
+
 	}
 
 	return result, nil
